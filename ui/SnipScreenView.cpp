@@ -1794,7 +1794,7 @@ void SnipScreenView::mousePressEvent(QMouseEvent* e)
         m_controller->onPress(toCapture(e->position().toPoint()));
     }
     else if (e->button() == Qt::RightButton)
-        m_controller->onAbort();
+        m_controller->onAbort(/*rightClick=*/true);
     else if (e->button() == Qt::MiddleButton)
         m_controller->onMiddleClick();         // configurable middle-click action
     applyCursor();                             // the click may have changed what's under it

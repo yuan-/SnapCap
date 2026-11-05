@@ -701,6 +701,11 @@ Built on the Stage 2/3 multi-monitor overlay:
   `Alt`+right-click quick-mark still wins. Tools that show no control points (freehand
   strokes, eraser, dragged line, number label) are unchanged, as is the pin editor (no shape
   selection there).
+- ✅ **CHANGED (2026-11-05) — right-click no longer closes an annotating capture.** Once the
+  region is committed (`m_editing`), a right-click that has nothing to finish/deselect/quick-mark
+  does nothing; only `Esc` and the toolbar × close the capture. While the region is still being
+  chosen, right-click still cancels (user's call). The × shares `onAbort` with right-click, so it
+  now passes `rightClick=false` and skips both right-click-only branches (shape deselect, no-op).
 - ✅ `ui/PaintBar` — **unified icon toolbar** (reworked from the original text
   bar). Row 1: tool GROUP icon buttons (shapes / lines / pencil / marker / redact / text /
   eraser) ‖ undo · redo ‖ cancel · pin · save · copy. Row 2: the selected group's VARIANT

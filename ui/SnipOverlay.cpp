@@ -661,7 +661,7 @@ QVector<SnipOverlay::TipRow> SnipOverlay::tipRows() const
                             tr("snip.tips.straight_stroke_45")});
         }
         // The line tool's right-click means something different per phase — and in Idle
-        // it means nothing at all (a right-click there closes the capture), so the row
+        // it means nothing at all (a right-click there does nothing), so the row
         // only appears once a line is actually under construction.
         if (isLineTool() && lineEditing())
             rows.push_back({{QStringLiteral("Right-click")},
@@ -1745,7 +1745,7 @@ void SnipOverlay::onDoubleClick()
         runSnipAction(m_doubleClickAction, m_doubleClickQuit);
 }
 
-void SnipOverlay::onAbort()
+void SnipOverlay::onAbort(bool rightClick)
 {
     // Esc leaves Move mode first, rather than throwing the whole capture away — the
     // mode is the innermost thing to back out of.
@@ -1782,9 +1782,13 @@ void SnipOverlay::onAbort()
     // A PLAIN right-click is untouched and still closes the capture.
     if (applyQuickMark())
         return;
-    // A selected shape (grips showing) is confirmed by dropping the selection — the
-    // shape itself is already in the document — rather than closing the capture.
-    if (m_shapeSel) { deselectShape(); return; }
+    // A right-click on a selected shape (grips showing) confirms it by dropping the
+    // selection — the shape itself is already in the document.
+    if (rightClick && m_shapeSel) { deselectShape(); return; }
+    // Once the region is committed, a right-click never closes the capture: only Esc and
+    // the toolbar's × do. While the region is still being chosen it still cancels.
+    if (rightClick && m_editing)
+        return;
     finish();
 }
 

@@ -203,7 +203,7 @@ public:
     void onElementLevelWheel(int steps);            // +1 = outward to the parent element
     void onDoubleClick();
     void onMiddleClick();                          // configurable middle-click action
-    void onAbort();
+    void onAbort(bool rightClick = false);         // a right-click, or the toolbar's ×
     void onKey(int key, Qt::KeyboardModifiers mods);
     void onKeyRelease(int key);                    // only F5 (refresh) cares about key-up
 

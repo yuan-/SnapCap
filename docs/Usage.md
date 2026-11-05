@@ -87,7 +87,7 @@ happens on that frozen image until you finish or abort.
 | Resize into a **square** | Hold `Ctrl` and drag a **corner** handle | The region grows/shrinks with width = height |
 | Select the entire (virtual) desktop | `Ctrl + A` | Sets the selection to fullscreen across all monitors and enters edit mode |
 | Confirm the highlighted suggestion | **Left-click** it | Commits that region (enters read-only / edit-ready state) |
-| Abort while choosing | **Right-click** (before a shape/text is in progress) | Closes the overlay and discards the snip (see §1.7) |
+| Abort while choosing | **Right-click** (before the region is committed) | Closes the overlay and discards the snip (see §1.7) |
 
 > 💡 Snip works across a **multi-monitor, mixed-DPI** setup — a single drag can span two
 > screens at different scale factors and the result is stitched correctly. This is the app's
@@ -333,11 +333,12 @@ nothing quietly, and the snip is **not** added to your history.
 
 | You want to… | Do this | Result |
 |---|---|---|
-| Cancel the snip | `Esc`, or **right-click** (when not editing), or the overlay **X** button | Discards everything and closes the overlay |
+| Cancel the snip | `Esc`, or the toolbar **×** button — or **right-click**, but only while the region is still being chosen | Discards everything and closes the overlay |
 | — | Switching focus to another app's window | Auto-aborts (toggleable in Preferences). **Not while recording** — a recording hands the desktop back to the app you are filming on purpose, so clicking it never ends the session |
 
-> ⚠️ While a **text box** is open or a **line** is being placed, **right-click** does *not*
-> abort — it **finishes** the current shape/vertex instead. Press `Esc` to actually cancel.
+> ⚠️ Once the region is committed, **right-click never aborts**. It finishes an open text box or
+> line, or drops a selected shape, and otherwise does nothing. Press `Esc` or the toolbar **×**
+> to actually cancel.
 
 **Ask before discarding.** Preferences → Snip → Keys → *"Ask for confirmation when Esc is
 pressed"* puts a "Discard this capture?" question in the way of `Esc`. It only appears once you
@@ -408,8 +409,8 @@ snip and a pin (see §3.6).
 - **Drag tools** (rectangle, ellipse, pencil, marker, mosaic, blur): the shape commits when you
   **release** the mouse — there's no separate "finish" step. A rectangle, ellipse, mosaic, blur
   or marker-rect is then left selected (§2.1a); a **right-click** confirms it by dropping that
-  selection. A right-click while nothing is in progress or selected **aborts the whole snip**
-  (see §1.7).
+  selection. A right-click while nothing is in progress or selected does **nothing** — it never
+  closes the capture once you're annotating (see §1.7).
 - **Constrained shapes** — hold a modifier while drawing:
   - `Ctrl` → rectangle becomes a **square**, ellipse a **circle** (also mosaic, blur, eraser-rect
     and marker-rect, which are all rectangle drags)
@@ -473,7 +474,7 @@ Instead of dragging a shape around a button, field or toolbar item, let SnapCap 
   region, the box shows that — the mark keeps the element's real bounds, and the part outside
   the region simply doesn't appear in the saved image.
 - A **plain** right-click is unchanged: it drops a shape selection if one is showing (§2.1a),
-  and otherwise still aborts the snip (§1.7).
+  and otherwise does nothing (§1.7).
 
 ### 2.3 Pen width & editing history
 
@@ -1205,8 +1206,8 @@ behavior\clickWindowMs=300
 - `Ctrl + V` on a pin — **replaces the image and clears annotations**.
 - **Area reuse** (`R` / `Shift + R`) is **session-only** and resets on restart; the history
   strip (`,` / `.`) persists.
-- Right-click **finishes** an open text box or line, or drops a selected shape, instead of
-  aborting — use `Esc` to cancel.
+- Once the region is committed, right-click **never aborts** the snip — use `Esc` or the toolbar
+  **×** to cancel.
 - Deleting a pin group **discards its pins**.
 - The `` ` ``/`!` cursor toggle is a **no-op** if "Disable cursor capture" is set.
 - `G` during a snip toggles **crosshair guide lines**; nothing toggles the magnifier.
