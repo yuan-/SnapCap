@@ -445,6 +445,7 @@ private:
     // Phase 1 (Building): left-click places vertices, cursor previews the next; a
     //   right-click ends it. Phase 2 (Controlling): vertices show as draggable
     //   control points; a second right-click finalizes (commits to the document).
+    //   A press-drag-release in Idle is a single segment, committed on release.
     bool isLineTool() const { return m_tool == annotation::ToolId::Line; }
     void handleLinePress(const QPoint& g, Qt::KeyboardModifiers mods);
     void handleLineMove(const QPoint& g, Qt::KeyboardModifiers mods);

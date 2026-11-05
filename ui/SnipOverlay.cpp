@@ -3866,12 +3866,15 @@ void SnipOverlay::handleLineRelease(const QPoint& g, Qt::KeyboardModifiers mods)
 {
     if (m_linePhase == LinePhase::Building) {
         if (m_lineDragArmed && m_lineDragging) {
-            // A drag (not a click) means a single-segment line: skip building and go
-            // straight to the control phase.
+            // A drag (not a click) means a single-segment line: commit it on release,
+            // skipping both the building and the control phase.
             m_lineVerts = { m_linePressPos, lineSnap(m_linePressPos, g, mods) };
-            m_dragVert = -1;
-            m_linePhase = LinePhase::Controlling;
             rebuildLineDraft(nullptr);
+            m_doc->add(std::move(m_draft));
+            m_draft.reset();
+            m_linePhase = LinePhase::Idle;
+            m_lineVerts.clear();
+            m_dragVert = -1;
             updateEditChrome();
         }
         m_lineDragArmed = false;                      // a plain click → multi-segment mode

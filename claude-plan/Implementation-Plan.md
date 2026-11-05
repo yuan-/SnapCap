@@ -690,6 +690,11 @@ Built on the Stage 2/3 multi-monitor overlay:
   control points were draggable but **invisible** (`lineControlPoints()`/the chrome pass existed
   only on `SnipOverlay`/`SnipScreenView`). Pre-existing, surfaced by the user while testing the
   45° snap. Now drawn in widget coords at a fixed 8px on-screen size, matching the overlay.
+- ✅ **CHANGED (2026-11-05) — a dragged single line commits on release.** The press-drag-release
+  gesture used to land in the Controlling phase and wait for a right-click; it now commits
+  straight to the document in both `SnipOverlay` and `PinEditController`, like the other drag
+  tools. Click-placed (multi-segment) lines keep the right-click → control → right-click flow.
+  Trade-off (user's call): a dragged line's ends can no longer be adjusted — `Ctrl+Z` and redraw.
 - ✅ `ui/PaintBar` — **unified icon toolbar** (reworked from the original text
   bar). Row 1: tool GROUP icon buttons (shapes / lines / pencil / marker / redact / text /
   eraser) ‖ undo · redo ‖ cancel · pin · save · copy. Row 2: the selected group's VARIANT

@@ -356,7 +356,7 @@ snip and a pin (see §3.6).
 |---|---|---|
 | Show / hide the paint bar | `Space` | Toggles the annotation toolbar |
 | Pick a tool | Click it on the paint bar | Shapes (rectangle / ellipse), lines & arrows, pencil, marker, redaction (mosaic / blur), text, number label, eraser — picking a group expands its variants on a second row |
-| Confirm a line / arrow | **Right-click** | First right-click ends placement and turns the vertices into draggable control points; a second right-click commits the shape |
+| Confirm a multi-segment line / arrow | **Right-click** | First right-click ends placement and turns the vertices into draggable control points; a second right-click commits the shape. A dragged single line commits on release |
 
 > 💡 **Arrow vs. line — one tool, not two:** the paint bar has a single **lines** button. An
 > arrow is just a line whose end carries an arrowhead: the sub-bar sets each end's decoration
@@ -379,9 +379,9 @@ snip and a pin (see §3.6).
 
 ### 2.1 Drawing specifics
 
-- **Single line / arrow:** press at the start, drag to the end, release. The line then sits in
-  its **control phase** — drag either end to adjust, then **right-click** to commit it. Unlike
-  the drag tools below, releasing the mouse does *not* finish it.
+- **Single line / arrow:** press at the start, drag to the end, release. Like the drag tools
+  below, the line commits when you **release** the mouse — no right-click needed. To redo it,
+  `Ctrl+Z` and drag again.
 - **Multi-segment line:** click successive points; each click (or a double-click) adds a vertex.
   **Right-click** ends placement (with only one vertex placed, it discards the line instead),
   leaving draggable control points; **right-click again** to commit.
@@ -413,9 +413,9 @@ snip and a pin (see §3.6).
     and marker-rect, which are all rectangle drags)
   - `Shift` → line / arrow snaps to **horizontal / vertical / 45°**. This works while dragging
     the line out, while click-placing each vertex of a multi-segment line, and — on a
-    **single-segment** line — while dragging either end's control point afterwards. (A middle
-    vertex of a multi-segment line has two neighbours, so there's no single angle to snap to;
-    those stay free.)
+    click-placed line with just **two** vertices — while dragging either end's control point
+    afterwards. (A middle vertex of a multi-segment line has two neighbours, so there's no single
+    angle to snap to; those stay free.)
   - `Shift` → **pencil / marker** draw a straight stroke from where the drag began, at any
     angle; `Ctrl` → the same stroke locked to **horizontal / vertical / 45°** (a near-horizontal
     highlight lies flat). Both work mid-stroke: press or release the modifier while dragging to
