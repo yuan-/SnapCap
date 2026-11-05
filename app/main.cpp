@@ -12,7 +12,7 @@ int main(int argc, char** argv)
     QApplication app(argc, argv);
     QApplication::setApplicationName(QStringLiteral("SnapCap"));
     QApplication::setOrganizationName(QStringLiteral("SnapCap"));
-    QApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QApplication::setApplicationVersion(QStringLiteral("0.2.0"));
     app.setQuitOnLastWindowClosed(false);          // tray app outlives its windows
 
     // Editable language files ship next to the executable.
