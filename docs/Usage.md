@@ -406,8 +406,10 @@ snip and a pin (see §3.6).
   It combines with the end dropdowns — a curved shaft can carry any of the end decorations, which
   follow the curve's direction where it ends.
 - **Drag tools** (rectangle, ellipse, pencil, marker, mosaic, blur): the shape commits when you
-  **release** the mouse — there's no separate "finish" step. A right-click while nothing is in
-  progress **aborts the whole snip** (see §1.7), so don't use it to "confirm" a drag shape.
+  **release** the mouse — there's no separate "finish" step. A rectangle, ellipse, mosaic, blur
+  or marker-rect is then left selected (§2.1a); a **right-click** confirms it by dropping that
+  selection. A right-click while nothing is in progress or selected **aborts the whole snip**
+  (see §1.7).
 - **Constrained shapes** — hold a modifier while drawing:
   - `Ctrl` → rectangle becomes a **square**, ellipse a **circle** (also mosaic, blur, eraser-rect
     and marker-rect, which are all rectangle drags)
@@ -437,7 +439,7 @@ is what you click, so an empty-canvas drag still draws a new shape.
 | Restyle it | Change **colour / width / fill / line style / mosaic strength** on the paint bar while it's selected | Re-styles the selected shape in place |
 | Change its width / strength | **Mouse scroll** anywhere while it's selected | Rectangle/ellipse pen width, or mosaic/blur strength, changes live and directly on the shape (one `Ctrl + Z` per scroll) |
 | Delete it | Click the **×** button, or press `Delete` / `Backspace` | Removes the selected shape |
-| Deselect | `Esc`, click empty canvas, or switch tools | Drops the selection |
+| Deselect | `Esc`, **right-click**, click empty canvas, or switch tools | Drops the selection |
 
 - **A shape you've just drawn is auto-selected** the moment you release the drag — its grips,
   spin handle and × button appear right away, so you can tweak it without clicking it again.
@@ -470,7 +472,8 @@ Instead of dragging a shape around a button, field or toolbar item, let SnapCap 
 - The dashed preview is **not** trimmed to your snip region. If the element sticks out past the
   region, the box shows that — the mark keeps the element's real bounds, and the part outside
   the region simply doesn't appear in the saved image.
-- A **plain** right-click is unchanged: it still aborts the snip (§1.7).
+- A **plain** right-click is unchanged: it drops a shape selection if one is showing (§2.1a),
+  and otherwise still aborts the snip (§1.7).
 
 ### 2.3 Pen width & editing history
 
@@ -1202,7 +1205,8 @@ behavior\clickWindowMs=300
 - `Ctrl + V` on a pin — **replaces the image and clears annotations**.
 - **Area reuse** (`R` / `Shift + R`) is **session-only** and resets on restart; the history
   strip (`,` / `.`) persists.
-- Right-click **finishes** an open text box or line instead of aborting — use `Esc` to cancel.
+- Right-click **finishes** an open text box or line, or drops a selected shape, instead of
+  aborting — use `Esc` to cancel.
 - Deleting a pin group **discards its pins**.
 - The `` ` ``/`!` cursor toggle is a **no-op** if "Disable cursor capture" is set.
 - `G` during a snip toggles **crosshair guide lines**; nothing toggles the magnifier.

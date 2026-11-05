@@ -1782,6 +1782,9 @@ void SnipOverlay::onAbort()
     // A PLAIN right-click is untouched and still closes the capture.
     if (applyQuickMark())
         return;
+    // A selected shape (grips showing) is confirmed by dropping the selection — the
+    // shape itself is already in the document — rather than closing the capture.
+    if (m_shapeSel) { deselectShape(); return; }
     finish();
 }
 

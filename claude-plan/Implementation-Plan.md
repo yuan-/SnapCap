@@ -695,6 +695,12 @@ Built on the Stage 2/3 multi-monitor overlay:
   straight to the document in both `SnipOverlay` and `PinEditController`, like the other drag
   tools. Click-placed (multi-segment) lines keep the right-click → control → right-click flow.
   Trade-off (user's call): a dragged line's ends can no longer be adjusted — `Ctrl+Z` and redraw.
+- ✅ **CHANGED (2026-11-05) — right-click confirms a selected shape.** In the snip overlay a
+  right-click while a Rect/Ellipse/MarkerRect/Mosaic/Blur is selected (grips showing, e.g. the
+  auto-selection after drawing) drops the selection instead of closing the capture, like `Esc`.
+  `Alt`+right-click quick-mark still wins. Tools that show no control points (freehand
+  strokes, eraser, dragged line, number label) are unchanged, as is the pin editor (no shape
+  selection there).
 - ✅ `ui/PaintBar` — **unified icon toolbar** (reworked from the original text
   bar). Row 1: tool GROUP icon buttons (shapes / lines / pencil / marker / redact / text /
   eraser) ‖ undo · redo ‖ cancel · pin · save · copy. Row 2: the selected group's VARIANT
