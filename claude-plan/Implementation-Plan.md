@@ -783,7 +783,8 @@ a serializable model, and golden-tested rendering.
   `Alt`+hover previews the Stage 3 detected element as a dashed box (`SnipOverlay::
   refreshQuickMark`, drawn unclipped by `SnipScreenView` so overflow past the region shows)
   and `Alt`+right-click fills it (`applyQuickMark`, one undo step). A modifier is required
-  because a plain right-click already aborts; `Alt` over `Ctrl` because `Ctrl` already
+  because a plain right-click then aborted (since 2026-11-05 it does nothing while annotating);
+  `Alt` over `Ctrl` because `Ctrl` already
   squares the rect tools mid-drag. Detection ignores the `Tab` detect mode. To keep `Alt`
   single-purpose the **aux-line toggle moved to `G`**; `nativeEvent`'s `WM_SYSKEYUP` hook (needed
   because Windows eats a lone Alt release) now calls `onAltReleased()` to drop the preview.

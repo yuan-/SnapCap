@@ -89,7 +89,8 @@ SnapCap has **three major functionalities**: **Snip**, **Image Annotation**, and
 - Paste/pin to screen — toolbar pin / `Ctrl + T` / middle-click the area.
 
 **Abort a snip**
-- `Esc` at any time, the `X` button, or right-click when not in edit mode.
+- `Esc` at any time, the `X` button, or right-click when not in edit mode. Once the region
+  is committed, right-click never aborts *(user's call, 2026-11-05)*.
 - Another program's window becoming active (this auto-abort is toggleable in Preferences).
 
 ---
@@ -101,8 +102,11 @@ Tools (free): rectangle, ellipse, line, line-strip, **arrow**, pencil, marker pe
 
 **Drawing & editing**
 - `Space` — show/hide the paint (annotation) bar.
-- Right-click — finish the current shape.
-- **Line strip:** click successive points; **single line:** press-drag start→end.
+- Right-click — finish the current shape: an open text box, a click-placed line, or a selected
+  rect/ellipse/marker-rect/mosaic/blur (drops its grips). With nothing to finish it does
+  nothing — it never closes the capture *(2026-11-05)*.
+- **Line strip:** click successive points; **single line:** press-drag start→end, committed
+  on release with no right-click *(2026-11-05)*.
   As shipped, line, line-strip and arrow are **one** lines tool: the end dropdowns cover
   plain line vs. arrowheads, and click-placing vs. dragging covers strip vs. single segment.
 - **Independent line ends**: the lines sub-bar carries
@@ -195,7 +199,8 @@ Tools (free): rectangle, ellipse, line, line-strip, **arrow**, pencil, marker pe
   tools mark as their rect twin (`Marker`→`MarkerRect`, `Eraser`→`EraserRect`,
   `MosaicBrush`→`Mosaic`, `BlurBrush`→`Blur`) without changing the toolbar mode; pencil,
   line, text and number label are excluded. *(`Alt` is required
-  because a bare right-click already aborts the snip, and
+  because a bare right-click then aborted the snip (since 2026-11-05 it does nothing while
+  annotating), and
   the preview makes the target region visible before committing — user's call, 2026-07-24.
   `Alt` rather than `Ctrl` because `Ctrl` already squares the rect tools mid-drag; the
   aux-line toggle moved off `Alt` to `G` so the modifier carries one meaning only.)*
@@ -408,7 +413,7 @@ tall image. As built: the `ScrollStitcher`, `WinWheelWatch`, `ScrollCaptureBar` 
 | `Ctrl + Alt + C` | Copy the image as a file (when enabled in Output → Clipboard → Copy image as file) |
 | `Ctrl + S` | Save as file |
 | `Ctrl + Shift + S` | Save to Quick-Save folder |
-| Right-click | Finish current shape (in edit mode) |
+| Right-click | Finish current shape / drop a shape selection (in edit mode; never aborts) |
 | Scroll | Decrease/increase pen width (in edit mode) |
 
 > Global defaults: `F1` snip · `Ctrl + F1` snip and copy · `Shift + F1` custom snip ·
