@@ -186,10 +186,15 @@ RecordBar::RecordBar(QWidget* parent) : QWidget(parent)
     m_pause->setIconSize(QSize(20, 20));
     m_pause->setFixedSize(30, 30);
     m_timer = new RecordTimerField(this);
+    m_input = new QPushButton(this);
+    m_input->setCursor(Qt::PointingHandCursor);
+    m_input->setIconSize(QSize(20, 20));
+    m_input->setFixedSize(30, 30);
 
     row->addWidget(m_record);
     row->addWidget(m_pause);
     row->addWidget(m_timer);
+    row->addWidget(m_input);
 
     connect(m_record, &QPushButton::clicked, this, [this] {
         if (m_state == State::Idle)
@@ -202,6 +207,10 @@ RecordBar::RecordBar(QWidget* parent) : QWidget(parent)
         else if (m_state == State::Paused)    emit pauseToggled(false);
     });
     connect(m_timer, &RecordTimerField::delayChanged, this, &RecordBar::delayChanged);
+    connect(m_input, &QPushButton::clicked, this, [this] {
+        setInputDisplay(!m_inputOn);
+        emit inputDisplayToggled(m_inputOn);
+    });
 
     setStyleSheet(barQss());
     refreshButtons();
@@ -265,7 +274,19 @@ void RecordBar::retranslate()
     m_pause->setAccessibleName(pauseLabel);
     m_pause->setToolTip(pauseLabel);
     m_timer->setToolTip(tr.t(QStringLiteral("record.bar.timer_tip")));
+    // Swaps its icon rather than latching, like the paint bar's mode buttons.
+    m_input->setIcon(barIcon(m_inputOn ? "record_input_on" : "record_input_off"));
+    const QString inputLabel = m_inputOn ? tr.t(QStringLiteral("record.bar.input_on"))
+                                         : tr.t(QStringLiteral("record.bar.input_off"));
+    m_input->setAccessibleName(inputLabel);
+    m_input->setToolTip(inputLabel);
     adjustSize();
+}
+
+void RecordBar::setInputDisplay(bool on)
+{
+    m_inputOn = on;
+    retranslate();
 }
 
 int  RecordBar::delaySeconds() const           { return m_timer->delaySeconds(); }

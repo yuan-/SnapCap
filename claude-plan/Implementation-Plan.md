@@ -1341,8 +1341,15 @@ retention policy for 6.11.1, which we do not control and are not notified about.
 
 **Screen recording (2026-07-30 → 08-04)** is a net-new subsystem that no stage owns; it has its
 own phases 0–5, all complete. (Its plan was retired 2026-10-20; `Features.md` §3b, the recording rows
-of `Architecture-FileMap.md` and `Licence-Compliance-Plan.md` hold what it established.) Two things
-from it change this stage's picture:
+of `Architecture-FileMap.md` and `Licence-Compliance-Plan.md` hold what it established.)
+**Mouse and keyboard display (2026-11-05, ✅)** was added to it afterwards: a recording-bar toggle
+and the matching Preferences switch — one setting, linked both ways through `Settings::changed`
+(`recording/input/enabled` → `SnipOverlay::applyInputDisplay`, which arms `platform::IInputWatch`)
+and a Preferences → Recording **Mouse and keyboard** section whose `recording/input/mouse/*` and
+`recording/input/keys/*` settings all feed `recording::readInputStyle` → `InputOverlay::paint` in the
+encode loop. Tests: `tst_input_overlay`. Manual check: record with the toggle on, then confirm clicks,
+the badge, the halo and a shortcut caption appear in the file, and that plain typing does not in
+Shortcuts mode. Two things from the recording subsystem change this stage's picture:
 
 - **A second LGPL corresponding-source obligation.** SnapCap now builds and ships FFmpeg
   (`tools/build_ffmpeg.ps1`), so `SNAPCAP_FFMPEG_SOURCE_URL` sits beside `SNAPCAP_QT_SOURCE_URL`

@@ -8,6 +8,7 @@
 #include "platform/win/WinKeyboardFilter.h"
 #include "platform/win/WinQuickDragGesture.h"
 #include "platform/win/WinWheelWatch.h"
+#include "platform/win/WinInputWatch.h"
 #ifdef SNAPCAP_HAVE_TESSERACT
 #  include "platform/ocr/TesseractOcr.h"
 #  include <QCoreApplication>
@@ -50,6 +51,7 @@ Platform createPlatform()
     p.keyFilter = std::make_unique<WinKeyboardFilter>();
     p.quickDrag = std::make_unique<WinQuickDragGesture>();
     p.wheel     = std::make_unique<WinWheelWatch>();
+    p.inputWatch = std::make_unique<WinInputWatch>();
 #ifdef SNAPCAP_HAVE_TESSERACT
     // Tessdata lives in "<exe>/tessdata" (portable); the prefix is the exe dir.
     p.ocr = std::make_unique<TesseractOcr>(QCoreApplication::applicationDirPath());

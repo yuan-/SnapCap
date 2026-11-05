@@ -348,6 +348,7 @@ SnipOverlay* Application::beginSnip()
     overlay->setOcr(m_platform.ocr.get());                     // OCR backend (null → button no-ops)
     overlay->setBarcodeDecode(m_platform.barcode.get());                 // barcode backend (null → no code hint)
     overlay->setRecorder(m_platform.recorder.get());            // recorder (null → record button disabled)
+    overlay->setInputWatch(m_platform.inputWatch.get());        // input display hooks (null → toggle inert)
     overlay->setWheelWatch(m_platform.wheel.get());             // wheel hook (null → scroll button refuses)
     overlay->setWindowTitle(fgTitle);                          // %title% token source
     overlay->setNotifySink([this](const QString& title, const QString& body) {

@@ -661,6 +661,27 @@ look inactive (greyed title bar) while you draw; it goes back to normal as soon 
 Choosing a tool moves the recording row down to a **third row**, directly under the tool's own
 options row, so all three stay visible.
 
+### Showing mouse and keyboard actions in the video
+
+The last button on the recording row (a key cap and a mouse) turns the **mouse and keyboard
+display** on or off. While it is on, the video shows:
+
+- a **ring** spreading out from every click — a different color for left, right and middle;
+- optionally a **highlight** circle that follows the pointer, and a small **mouse badge** beside
+  it that lights up the pressed button and shows which way the wheel turned;
+- a **caption box** with the keys you press, e.g. `Ctrl + Shift + S`. Pressing the same shortcut
+  again counts up (`Ctrl + Z ×3`).
+
+By default only **shortcuts** are shown — keys pressed with Ctrl, Alt or Win, plus keys like
+Enter, Esc, Tab, Backspace, the arrows and the F-keys — so ordinary typing, passwords included, never
+appears. Switch **Keys to show** to **All keys** in Preferences if you want typed text too.
+
+These appear **only in the recorded file**, not on your screen. You can flip the button
+mid-recording; the clip shows input only for the stretches where it was on. The button remembers
+its state for the next recording. **Show mouse and keyboard in recordings** in Preferences →
+Recording is the same switch: changing one changes the other, even during a recording. While it
+is off, the rest of that section is greyed out.
+
 | You want to… | Do this |
 |---|---|
 | Start recording | `F1` → pick a region → movie-camera button → **record** (red dot) |
@@ -670,6 +691,7 @@ options row, so all three stay visible.
 | Pause / resume | **Pause** (two bars) on the recording row, then **resume** (play); paused time is cut from the file |
 | Stop and save | **Stop** (red square; a preview window opens for review and trimming) |
 | Record microphone too | Tick **Record microphone** in Preferences → Recording |
+| Show clicks and keys in the video | Click the key-cap-and-mouse button on the recording row (works mid-recording) |
 
 ### Settings — Preferences → Recording
 
@@ -680,6 +702,7 @@ Everything about recording lives in **Preferences → Recording** (the tab direc
 | **Video** | Format (MP4 / MKV / WebM / **GIF**), codec, frame rate, quality vs. target bitrate, and whether to prefer a hardware encoder |
 | **Sound** | System sound and microphone (each on its own), plus audio quality |
 | **Behavior** | Countdown before recording, whether the cursor is drawn in, and an automatic stop after N minutes |
+| **Mouse and keyboard** | The on/off switch (the same one as the recording row's display button), and how clicks and keys look in the video: cursor highlight, click rings, mouse badge and button colors; which keys show (shortcuts only / all keys), caption position, distance from the edge, text size, colors, background opacity and how long each key stays. Sizes are pixels of the video |
 | **GIF** | Frame rate, maximum width and looping — used only when the format is GIF |
 | **Output** | Where files go, with a live preview of the resulting name |
 

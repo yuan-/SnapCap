@@ -187,6 +187,7 @@ add_library(snapcap_core STATIC
     core/ocr/OcrSelection.h        core/ocr/OcrSelection.cpp
     core/scroll/ScrollStitcher.h   core/scroll/ScrollStitcher.cpp
     core/recording/RecordingSpec.h core/recording/RecordingSpec.cpp
+    core/recording/InputOverlay.h  core/recording/InputOverlay.cpp
     core/barcode/BarcodeHint.h               core/barcode/BarcodeHint.cpp
     core/codec/TgaEncoder.h        core/codec/TgaEncoder.cpp
     core/codec/Quantize.h          core/codec/Quantize.cpp
@@ -254,6 +255,7 @@ if(WIN32)
         platform/win/WinKeyboardFilter.h platform/win/WinKeyboardFilter.cpp
         platform/win/WinQuickDragGesture.h platform/win/WinQuickDragGesture.cpp
         platform/win/WinWheelWatch.h       platform/win/WinWheelWatch.cpp
+        platform/win/WinInputWatch.h       platform/win/WinInputWatch.cpp
         platform/win/WinPlatform.cpp)
 endif()
 
@@ -406,7 +408,7 @@ endif()
 # --- Tests ------------------------------------------------------------------
 if(SNAPCAP_BUILD_TESTS)
     enable_testing()
-    foreach(t IN ITEMS tst_recording_spec tst_i18n tst_keyseq_codec tst_action_registry tst_settings tst_selection tst_click_slop tst_image_export tst_filename_template tst_manual_save tst_font_name_table tst_screen_composite tst_screen_layout tst_color tst_annotation_document tst_annotation_golden tst_render tst_shifted_shapes tst_clipboard_content tst_pin_model tst_recover_ring tst_group_registry tst_session_store tst_history tst_area_history tst_history_strip tst_tips_placement tst_ocr_selection tst_barcode_hint tst_image_codecs tst_rounded_corners tst_scroll_stitcher)
+    foreach(t IN ITEMS tst_recording_spec tst_input_overlay tst_i18n tst_keyseq_codec tst_action_registry tst_settings tst_selection tst_click_slop tst_image_export tst_filename_template tst_manual_save tst_font_name_table tst_screen_composite tst_screen_layout tst_color tst_annotation_document tst_annotation_golden tst_render tst_shifted_shapes tst_clipboard_content tst_pin_model tst_recover_ring tst_group_registry tst_session_store tst_history tst_area_history tst_history_strip tst_tips_placement tst_ocr_selection tst_barcode_hint tst_image_codecs tst_rounded_corners tst_scroll_stitcher)
         add_executable(${t} test/${t}.cpp)
         target_link_libraries(${t} PRIVATE snapcap_core Qt6::Test)
         # Lets a test read repo data files (e.g. res/keymap.default.yaml) that are

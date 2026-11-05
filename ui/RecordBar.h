@@ -47,7 +47,7 @@ private:
     QColor m_accent;
 };
 
-// The 2nd-level RECORDING toolbar: [Record/Stop] [Pause/Resume] [timer].
+// The 2nd-level RECORDING toolbar: [Record/Stop] [Pause/Resume] [timer] [input display].
 //
 // Mirrors OcrBar's role — a standalone framed row the host controller positions —
 // but unlike OCR, recording is NOT exclusive with the drawing tools: you can arm an
@@ -73,11 +73,16 @@ public:
     void setElapsed(qint64 ms);            // drives the timer while recording
     void setCountdown(int secondsLeft);    // drives it while counting down
 
+    // The mouse/keyboard display toggle. Usable in every state, mid-recording too.
+    bool inputDisplay() const { return m_inputOn; }
+    void setInputDisplay(bool on);         // no signal: seeding from the setting
+
 signals:
     void startRequested();                 // Record pressed while Idle
     void stopRequested();                  // Stop pressed while Counting/Recording/Paused
     void pauseToggled(bool paused);
     void delayChanged(int seconds);
+    void inputDisplayToggled(bool on);     // the user clicked the toggle
 
 private:
     QString barQss() const;
@@ -86,6 +91,8 @@ private:
     QPushButton* m_record = nullptr;       // Record ⇄ Stop
     QPushButton* m_pause = nullptr;        // Pause ⇄ Resume
     RecordTimerField* m_timer = nullptr;
+    QPushButton* m_input = nullptr;        // mouse/keyboard display on ⇄ off
+    bool m_inputOn = false;
     State m_state = State::Idle;
     QColor m_accent;
 };

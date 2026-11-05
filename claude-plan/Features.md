@@ -289,12 +289,19 @@ duties: `Licence-Compliance-Plan.md`; known gaps: `Unimplemented-Features.md` §
 
 - **Entry point is the snip toolbar**, not a hotkey: start a snip, pick a region, then press the
   movie-camera button. There is deliberately no global recording hotkey.
-- 2nd-level bar: **Record/Stop · Pause/Resume · timer**. The timer doubles as an editable
+- 2nd-level bar: **Record/Stop · Pause/Resume · timer · mouse/keyboard display toggle**. The timer doubles as an editable
   countdown (`-00:05`), counting down to `00:00` and then up as elapsed.
 - On Record the region goes **live and click-through**, so the app being recorded stays usable.
 - **Annotations can be drawn while recording** and are burned into the video from the moment
   drawn. Arming a tool takes input back; disarming returns click-through. Mosaic/blur are the one
   exception — they read the picture underneath, which here is live video, so they are disabled.
+- **Mouse and keyboard display**: a toggle on the recording bar draws input into the video — a
+  cursor halo, a ripple per click (left/right/middle colors), a small mouse badge showing the
+  held button and wheel, and a caption box of the keys pressed (`Ctrl + Shift + S`, repeats count
+  up as `×3`). **Shortcuts only** by default, so typed text (passwords) never shows; **All keys**
+  also shows typing. Video only — nothing extra appears on screen. Toggle works mid-recording and
+  persists; Preferences has the same switch, linked both ways; the style (position, sizes, colors, opacity, display time) is in Preferences →
+  Recording → Mouse and keyboard.
 - **Audio**: desktop (WASAPI loopback, compensated for the speaker volume) and/or microphone,
   mixed into one track.
 - **Formats**: MP4 / MKV / WebM / **GIF**; H.264, H.265, AV1, VP9, each with a software fallback

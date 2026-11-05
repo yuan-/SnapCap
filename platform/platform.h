@@ -13,6 +13,8 @@
 
 #include "core/recording/RecordingSpec.h"   // recording::Config (IRecorder::Request)
 
+namespace recording { class InputOverlay; }
+
 // SnapCap platform-abstraction layer.
 //
 // Everything OS-specific lives behind these interfaces so the core/UI stay
@@ -311,6 +313,32 @@ public:
     virtual void disarm() = 0;          // always safe to call, even if not armed
 };
 
+// --- Mouse + keyboard watch (input display in recordings) --------------------
+// Global low-level mouse and keyboard hooks that REPORT input without consuming any
+// of it, so a recording can show the clicks and keys it captured. Armed only while a
+// recording runs with the input display on, so nothing listens to the keyboard
+// otherwise. Concrete per-OS (Windows only for now); other platforms leave
+// `inputWatch` null, which simply disables the input display.
+class IInputWatch {
+public:
+    virtual ~IInputWatch() = default;
+    // Called on the GUI thread, SYNCHRONOUSLY from inside the hook — so each callback
+    // must be cheap (store and return), or the OS skips the hook under load.
+    // Positions are virtual-desktop physical px (= capture px).
+    struct Callbacks {
+        std::function<void(QPoint pos)> onMove;          // also once at arm(): where it is now
+        std::function<void(Qt::MouseButton button, bool down, QPoint pos)> onButton;
+        std::function<void(bool up, bool horizontal, QPoint pos)> onWheel;   // up/right = true
+        // `qtKey` is the Qt::Key (0 when none fits; modifiers arrive as Key_Control,
+        // Key_Shift, Key_Alt, Key_Meta), `text` what it typed under the foreground
+        // window's layout, `label` its key-cap name. Auto-repeat is filtered out:
+        // each `down` is a fresh press.
+        std::function<void(int qtKey, bool down, QString text, QString label)> onKey;
+    };
+    virtual void arm(Callbacks cb) = 0;
+    virtual void disarm() = 0;          // always safe to call, even if not armed
+};
+
 // Synthesise `notches` of wheel at the current pointer position, one notch being the
 // system's WHEEL_DELTA: vertical positive scrolls up, negative down; horizontal positive
 // scrolls right, negative left. Windows delivers it to whatever window is under the
@@ -364,6 +392,10 @@ public:
     // ARGB32_Premultiplied; a null image clears it. Safe to call from the GUI thread
     // while recording (the encode loop reads it under a lock).
     virtual void setOverlay(const QImage& overlay) = 0;
+    // Mouse/keyboard indicators painted over every subsequent frame, after the overlay
+    // above: unlike that static layer they animate, so they are drawn per frame from
+    // the frame's own time. Null clears it. Same threading contract as setOverlay().
+    virtual void setInputOverlay(std::shared_ptr<recording::InputOverlay> input) = 0;
     // Human-readable reason the last start()/recording failed (already translated).
     virtual QString error() const = 0;
 };
@@ -447,6 +479,7 @@ struct Platform {
     std::unique_ptr<IKeyboardFilter> keyFilter;  // null on platforms without a backend
     std::unique_ptr<IQuickDragGesture> quickDrag; // null on platforms without a backend
     std::unique_ptr<IWheelWatch>    wheel;       // null on platforms without a backend
+    std::unique_ptr<IInputWatch>    inputWatch;  // null on platforms without a backend
     std::unique_ptr<IOcr>           ocr;         // null when no OCR backend is available
     std::unique_ptr<IBarcodeDecode>      barcode;          // null when no barcode backend is available
     std::unique_ptr<IRecorder>      recorder;    // null when no FFmpeg backend is available

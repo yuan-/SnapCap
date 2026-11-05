@@ -64,6 +64,7 @@
 #include "core/Logging.h"
 #include "core/action/ActionRegistry.h"
 #include "core/i18n/I18n.h"
+#include "core/recording/InputOverlay.h"
 #include "core/recording/RecordingSpec.h"
 #include "ui/ColorDialog.h"
 #include "ui/CustomSnipDialog.h"
@@ -2487,6 +2488,183 @@ QWidget* PreferencesDialog::buildRecordingTab()
                   false, false);
     setScaledWidth(m_recMaxMinutes, kNarrowControlW, kNarrowControlW);
 
+    // ---- Mouse and keyboard -------------------------------------------------------
+    // Drawn into the video while the master switch is on. Three cards under one heading:
+    // the switch, the mouse effects, then the key caption.
+    {
+        using namespace recording;
+        const InputStyle d;
+        const QString in = QStringLiteral("recording/input/");
+        addSectionHeader(v, QStringLiteral("prefs.recording.section.input"),
+                         QStringLiteral("prefs.desc.recording.section.input"));
+
+        auto check = [this, in](QVBoxLayout* card, const QString& key, bool def,
+                                const QString& name, bool divider = true) {
+            QCheckBox* cb = addCheckRow(card, in + key, def,
+                                        QStringLiteral("prefs.recording.input.") + name,
+                                        QStringLiteral("prefs.desc.recording.input.") + name,
+                                        divider);
+            m_recInChecks.push_back({cb, in + key, def});
+            connect(cb, &QCheckBox::toggled, this, [this] { updateInputEnablement(); });
+            return cb;
+        };
+        auto spin = [this, in](const QString& key, int def, int lo, int hi,
+                               const QString& suffix, int step = 1) {
+            auto* sp = new QSpinBox;
+            sp->setRange(lo, hi);
+            sp->setSingleStep(step);
+            sp->setSuffix(suffix);
+            const QString full = in + key;
+            connect(sp, &QSpinBox::valueChanged, this,
+                    [this, full](int val) { m_settings->setValue(full, val); });
+            m_recInSpins.push_back({sp, full, def});
+            return sp;
+        };
+        auto spinRow = [this](QVBoxLayout* card, const QString& name, QSpinBox* sp,
+                              bool divider = true) {
+            addSettingRow(card, QStringLiteral("prefs.recording.input.") + name,
+                          QStringLiteral("prefs.desc.recording.input.") + name, sp, divider,
+                          false);
+            setScaledWidth(sp, kNarrowControlW, kNarrowControlW);
+        };
+        // A swatch button that opens ColorDialog and persists the chosen color; with a
+        // label key it also carries text ("Left", "Background"...).
+        auto color = [this, in](const QString& key, const QColor& def, const QString& i18nKey) {
+            auto* btn = new QPushButton;
+            btn->setCursor(Qt::PointingHandCursor);
+            if (!i18nKey.isEmpty()) {
+                btn->setProperty("i18nKey", i18nKey);   // text applied in retranslate()
+                m_resetButtons.append(btn);
+            }
+            const QString full = in + key;
+            connect(btn, &QPushButton::clicked, this, [this, full, def, btn] {
+                const QColor c = ColorDialog::getColor(pasteColor(full, def), m_settings, this);
+                if (c.isValid()) {
+                    m_settings->setValue(full, c.name());
+                    setSwatchIcon(btn, c);
+                }
+            });
+            m_recInColors.push_back({btn, full, def});
+            return btn;
+        };
+        auto swatches = [](std::initializer_list<QPushButton*> btns) {
+            auto* wrap = new QWidget;
+            auto* h = new QHBoxLayout(wrap);
+            h->setContentsMargins(0, 0, 0, 0);
+            h->setSpacing(8);
+            h->addStretch();
+            for (QPushButton* b : btns)
+                h->addWidget(b);
+            return wrap;
+        };
+        // Combo items carry their label key in kInputLabelRole so retranslate() can
+        // re-label them.
+        auto combo = [this, in](const QString& key, const QString& def,
+                                std::initializer_list<std::pair<QString, const char*>> items) {
+            auto* box = new CenteredComboBox;
+            for (const auto& [data, label] : items) {
+                box->addItem(I18n::instance().t(QString::fromLatin1(label)), data);
+                box->setItemData(box->count() - 1, QString::fromLatin1(label), kInputLabelRole);
+            }
+            const QString full = in + key;
+            connect(box, &QComboBox::currentIndexChanged, this, [this, full, box](int) {
+                m_settings->setValue(full, box->currentData().toString());
+            });
+            m_recInCombos.push_back({box, full, def});
+            return box;
+        };
+
+        // The master switch. It is the SAME setting as the recording bar's button
+        // (recording/input/enabled), so each follows the other through Settings::changed
+        // — this dialog is non-modal and can be open while a recording runs.
+        auto* switchCard = beginCard(v);
+        m_recInEnabled = check(switchCard, QStringLiteral("enabled"), false,
+                               QStringLiteral("enabled"), /*divider=*/false);
+        connect(m_settings, &Settings::changed, this, [this](const QString& key) {
+            if (key != QStringLiteral("recording/input/enabled") || !m_recInEnabled)
+                return;
+            {
+                const QSignalBlocker block(m_recInEnabled);
+                m_recInEnabled->setChecked(m_settings->value(key, false).toBool());
+            }
+            updateInputEnablement();      // the blocked toggle would not have run it
+        });
+
+        // Mouse.
+        auto* mouseCard = beginCard(v);
+        m_recInHalo = check(mouseCard, QStringLiteral("mouse/halo"), d.halo,
+                            QStringLiteral("halo"), /*divider=*/false);
+        QPushButton* haloColor = color(QStringLiteral("mouse/haloColor"), d.haloColor, QString());
+        // The swatch rides at the end of the checkbox's own row, as Paste's shadow color does.
+        if (auto* rowLayout = qobject_cast<QHBoxLayout*>(m_recInHalo->parentWidget()->layout()))
+            rowLayout->addWidget(haloColor, 0, Qt::AlignVCenter);
+        addRowDivider(mouseCard);
+        QSpinBox* haloRadius = spin(QStringLiteral("mouse/haloRadius"), d.haloRadius, 8, 200,
+                                    QStringLiteral(" px"));
+        spinRow(mouseCard, QStringLiteral("halo_radius"), haloRadius);
+        m_recInHaloCtrls = {haloColor, haloRadius};
+
+        m_recInRipple = check(mouseCard, QStringLiteral("mouse/ripple"), d.ripple,
+                              QStringLiteral("ripple"));
+        QSpinBox* rippleRadius = spin(QStringLiteral("mouse/rippleRadius"), d.rippleRadius, 8,
+                                      200, QStringLiteral(" px"));
+        spinRow(mouseCard, QStringLiteral("ripple_radius"), rippleRadius);
+        m_recInRippleCtrls = {rippleRadius};
+
+        m_recInBadge = check(mouseCard, QStringLiteral("mouse/badge"), d.badge,
+                             QStringLiteral("badge"));
+        m_recInButtonColors = swatches(
+            {color(QStringLiteral("mouse/leftColor"), d.leftColor,
+                   QStringLiteral("prefs.recording.input.left")),
+             color(QStringLiteral("mouse/rightColor"), d.rightColor,
+                   QStringLiteral("prefs.recording.input.right")),
+             color(QStringLiteral("mouse/middleColor"), d.middleColor,
+                   QStringLiteral("prefs.recording.input.middle"))});
+        addSettingRow(mouseCard, QStringLiteral("prefs.recording.input.button_colors"),
+                      QStringLiteral("prefs.desc.recording.input.button_colors"),
+                      m_recInButtonColors, /*divider=*/false);
+
+        // Keyboard.
+        auto* keyCard = beginCard(v);
+        m_recInKeys = check(keyCard, QStringLiteral("keys/show"), d.keys, QStringLiteral("keys"));
+        QComboBox* mode = combo(QStringLiteral("keys/mode"), keyFor(d.keyMode),
+                                {{keyFor(KeyMode::Shortcuts), "prefs.recording.input.mode_shortcuts"},
+                                 {keyFor(KeyMode::AllKeys), "prefs.recording.input.mode_all"}});
+        addSettingRow(keyCard, QStringLiteral("prefs.recording.input.key_mode"),
+                      QStringLiteral("prefs.desc.recording.input.key_mode"), mode);
+        QComboBox* pos = combo(
+            QStringLiteral("keys/position"), keyFor(d.position),
+            {{keyFor(KeyPosition::TopLeft), "prefs.recording.input.pos_top_left"},
+             {keyFor(KeyPosition::TopCenter), "prefs.recording.input.pos_top_center"},
+             {keyFor(KeyPosition::TopRight), "prefs.recording.input.pos_top_right"},
+             {keyFor(KeyPosition::BottomLeft), "prefs.recording.input.pos_bottom_left"},
+             {keyFor(KeyPosition::BottomCenter), "prefs.recording.input.pos_bottom_center"},
+             {keyFor(KeyPosition::BottomRight), "prefs.recording.input.pos_bottom_right"}});
+        addSettingRow(keyCard, QStringLiteral("prefs.recording.input.position"),
+                      QStringLiteral("prefs.desc.recording.input.position"), pos);
+        QSpinBox* margin = spin(QStringLiteral("keys/margin"), d.margin, 0, 500,
+                                QStringLiteral(" px"));
+        spinRow(keyCard, QStringLiteral("margin"), margin);
+        QSpinBox* fontSize = spin(QStringLiteral("keys/fontSize"), d.fontSize, 8, 200,
+                                  QStringLiteral(" px"));
+        spinRow(keyCard, QStringLiteral("font_size"), fontSize);
+        QWidget* keyColors = swatches(
+            {color(QStringLiteral("keys/textColor"), d.textColor,
+                   QStringLiteral("prefs.recording.input.text")),
+             color(QStringLiteral("keys/bgColor"), d.bgColor,
+                   QStringLiteral("prefs.recording.input.background"))});
+        addSettingRow(keyCard, QStringLiteral("prefs.recording.input.key_colors"),
+                      QStringLiteral("prefs.desc.recording.input.key_colors"), keyColors);
+        QSpinBox* opacity = spin(QStringLiteral("keys/bgOpacity"), d.bgOpacity, 0, 100,
+                                 QStringLiteral(" %"));
+        spinRow(keyCard, QStringLiteral("bg_opacity"), opacity);
+        QSpinBox* duration = spin(QStringLiteral("keys/durationMs"), d.durationMs, 300, 10000,
+                                  QStringLiteral(" ms"), 100);
+        spinRow(keyCard, QStringLiteral("duration"), duration, /*divider=*/false);
+        m_recInKeyCtrls = {mode, pos, margin, fontSize, keyColors, opacity, duration};
+        m_recInCards = {mouseCard->parentWidget(), keyCard->parentWidget()};
+    }
+
     // ---- Output ---------------------------------------------------------------
     addSectionHeader(v, QStringLiteral("prefs.recording.section.output"), QString());
     auto* outCard = beginCard(v);
@@ -2602,6 +2780,15 @@ void PreferencesDialog::refreshRecordingControls()
     setCheck(m_recCursor,      get(QStringLiteral("behavior/captureCursor"), d.captureCursor).toBool());
     setCheck(m_recGifLoop,     get(QStringLiteral("gif/loop"), d.gifLoop).toBool());
     setCheck(m_recOpenPreview, get(QStringLiteral("output/openPreview"), true).toBool());
+    for (const PasteCheck& c : m_recInChecks)
+        setCheck(c.cb, m_settings->value(c.key, c.def).toBool());
+    for (const PasteSpin& s : m_recInSpins)
+        setSpin(s.sp, m_settings->value(s.key, s.def).toInt());
+    for (const RecColor& c : m_recInColors)
+        setSwatchIcon(c.btn, pasteColor(c.key, c.def));
+    for (const RecCombo& c : m_recInCombos)
+        selectData(c.box, m_settings->value(c.key, c.def).toString());
+    updateInputEnablement();
 
     m_recPath->blockSignals(true);
     m_recPath->setText(get(QStringLiteral("output/pathTemplate"), defaultPathTemplate()).toString());
@@ -2744,7 +2931,29 @@ void PreferencesDialog::restoreRecordingDefaults()
     m_settings->setValue(QStringLiteral("recording/gif/loop"), d.gifLoop);
     m_settings->setValue(QStringLiteral("recording/output/pathTemplate"), defaultPathTemplate());
     m_settings->setValue(QStringLiteral("recording/output/openPreview"), true);
+    // The mouse/keyboard section, master switch included (an open recording bar
+    // follows it through Settings::changed).
+    for (const PasteCheck& c : m_recInChecks) m_settings->setValue(c.key, c.def);
+    for (const PasteSpin& s : m_recInSpins)   m_settings->setValue(s.key, s.def);
+    for (const RecColor& c : m_recInColors)   m_settings->setValue(c.key, c.def.name());
+    for (const RecCombo& c : m_recInCombos)   m_settings->setValue(c.key, c.def);
     refreshRecordingControls();
+}
+
+void PreferencesDialog::updateInputEnablement()
+{
+    if (!m_recInHalo)
+        return;
+    // The master switch greys both cards WHOLE, labels included (the QSS has
+    // #SettingLabel/#SettingDesc :disabled rules for that). Disabling the card frame
+    // outranks the per-switch states below without overwriting them, so switching the
+    // master back on restores exactly what each sub-switch had greyed.
+    for (QWidget* card : m_recInCards) card->setEnabled(m_recInEnabled->isChecked());
+    for (QWidget* w : m_recInHaloCtrls)   w->setEnabled(m_recInHalo->isChecked());
+    for (QWidget* w : m_recInRippleCtrls) w->setEnabled(m_recInRipple->isChecked());
+    for (QWidget* w : m_recInKeyCtrls)    w->setEnabled(m_recInKeys->isChecked());
+    // Both the click rings and the badge are drawn in the button colors.
+    m_recInButtonColors->setEnabled(m_recInRipple->isChecked() || m_recInBadge->isChecked());
 }
 
 QWidget* PreferencesDialog::buildOcrTab()
@@ -3964,6 +4173,9 @@ void PreferencesDialog::retranslate()
         m_recHw->setItemText(2, I18n::instance().t(QStringLiteral("prefs.recording.hw_software")));
     }
     updateRecordingEnablement();     // the "will use ..." line is interpolated text
+    for (const RecCombo& c : m_recInCombos)
+        for (int i = 0; i < c.box->count(); ++i)
+            c.box->setItemText(i, I18n::instance().t(c.box->itemData(i, kInputLabelRole).toString()));
     auto& tr = I18n::instance();
     setWindowTitle(tr.t(QStringLiteral("preferences.title")));
 

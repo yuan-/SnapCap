@@ -23,7 +23,8 @@
 #include "ui/OcrTextLayer.h"               // OCR selectable-text layer (shared)
 #include "core/scroll/ScrollStitcher.h"    // held by value in a unique_ptr: needs the full type
 
-namespace platform { class IElementDetect; class IScreenCapture; class IClipboard; class IKeyboardFilter; class IOcr; class IBarcodeDecode; class IRecorder; class IWheelWatch; }
+namespace platform { class IElementDetect; class IScreenCapture; class IClipboard; class IKeyboardFilter; class IOcr; class IBarcodeDecode; class IRecorder; class IWheelWatch; class IInputWatch; }
+namespace recording { class InputOverlay; }
 class ActionRegistry;
 class SelectionModel;
 class SnipScreenView;
@@ -88,6 +89,9 @@ public:
     // A session makes the views click-through, so Qt never delivers the wheel — this
     // global hook is the only way to know the user scrolled.
     void setWheelWatch(platform::IWheelWatch* w) { m_wheelWatch = w; }
+    // Mouse/keyboard hooks for the recording's input display (may be null: the
+    // recording bar's toggle then records nothing extra).
+    void setInputWatch(platform::IInputWatch* w) { m_inputWatch = w; }
     // Pre-set the selection (capture px — the same units the size readout shows, so a
     // custom snip asking for 800x600 exports an 800x600 image whatever the monitor's
     // scaling); start() commits it and opens the annotate phase on it.
@@ -602,6 +606,9 @@ private:
     // Re-render the annotation layer and hand it to the recorder to burn into frames.
     // Flattened over a TRANSPARENT base, so it is the annotations alone.
     void pushRecordingOverlay();
+    // Arm the input hooks iff recording with the bar's toggle on, else disarm them —
+    // so nothing listens to the keyboard outside a recording that wants it.
+    void applyInputDisplay();
     bool recordingActive() const;           // counting down or recording
     // Park the toolbars as top-level windows while recording, so the overlay itself can
     // be click-through without disabling the buttons. (Masking a hole in the overlay was
@@ -809,6 +816,9 @@ private:
     bool m_recording = false;                    // recorder running (or paused)
     bool m_barsFloating = false;                 // toolbars re-parented to top level
     QRect m_recordRegion;                        // capture px, fixed when recording starts
+    platform::IInputWatch* m_inputWatch = nullptr;   // may be null: no input display
+    // This take's mouse/keyboard display, shared with the recorder's encode thread.
+    std::shared_ptr<recording::InputOverlay> m_inputOverlay;
 
     OcrBar* m_ocrBar = nullptr;
     OcrTextLayer m_ocrLayer;

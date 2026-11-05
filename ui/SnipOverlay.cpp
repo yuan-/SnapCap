@@ -44,6 +44,7 @@
 #include "ui/OcrBar.h"
 #include "ui/RecordBar.h"
 #include "ui/RecordPreviewDialog.h"
+#include "core/recording/InputOverlay.h"
 #include "ui/ScrollCaptureBar.h"
 #include "ui/ScrollStripWindow.h"
 #include "core/scroll/ScrollStitcher.h"
@@ -2535,6 +2536,26 @@ void SnipOverlay::toggleRecordBar(bool on)
             if (m_appSettings)
                 m_appSettings->setValue(QStringLiteral("recording/behavior/countdown"), s);
         });
+        // The mouse/keyboard display toggle IS the setting recording/input/enabled, which
+        // Preferences → Recording also switches: the button only writes it, and the
+        // changed() handler below is what applies it — whichever side changed it, even
+        // mid-recording. Persisting also means the next recording starts as this one left it.
+        if (m_appSettings) {
+            m_recordBar->setInputDisplay(
+                m_appSettings->value(QStringLiteral("recording/input/enabled"), false).toBool());
+            connect(m_appSettings, &Settings::changed, m_recordBar, [this](const QString& key) {
+                if (key != QStringLiteral("recording/input/enabled") || !m_recordBar)
+                    return;
+                m_recordBar->setInputDisplay(m_appSettings->value(key, false).toBool());
+                applyInputDisplay();
+            });
+        }
+        connect(m_recordBar, &RecordBar::inputDisplayToggled, this, [this](bool on) {
+            if (m_appSettings)
+                m_appSettings->setValue(QStringLiteral("recording/input/enabled"), on);
+            else
+                applyInputDisplay();
+        });
     }
     updateEditChrome();
 }
@@ -2680,15 +2701,29 @@ void SnipOverlay::startRecordingNow()
         }
     };
 
+    // The mouse/keyboard display is handed over whether or not the toggle is on, so
+    // turning it on mid-take needs no second handshake; it draws nothing while off.
+    // The style is read once per take, like the rest of the recording settings.
+    m_inputOverlay = std::make_shared<recording::InputOverlay>(
+        m_appSettings
+            ? recording::readInputStyle([this](const QString& k, const QVariant& d) {
+                  return m_appSettings->value(QStringLiteral("recording/input/") + k, d);
+              })
+            : recording::InputStyle());
+    m_recorder->setInputOverlay(m_inputOverlay);
+
     if (!m_recorder->start(req, cb)) {
         if (m_notifySink)
             m_notifySink(I18n::instance().t(QStringLiteral("record.failed_title")),
                          m_recorder->error());
+        m_recorder->setInputOverlay(nullptr);
+        m_inputOverlay.reset();
         m_recordBar->setState(RecordBar::State::Idle);
         return;
     }
     m_recording = true;
     m_recordBar->setState(RecordBar::State::Recording);
+    applyInputDisplay();
     enterRecordingLive();          // no-op when the countdown already did it
     pushRecordingOverlay();        // carry across anything drawn before Record was pressed
 }
@@ -2765,6 +2800,36 @@ void SnipOverlay::pushRecordingOverlay()
     QImage layer(m_recordRegion.size(), QImage::Format_ARGB32_Premultiplied);
     layer.fill(Qt::transparent);
     m_recorder->setOverlay(m_doc->flatten(layer, m_recordRegion));
+}
+
+void SnipOverlay::applyInputDisplay()
+{
+    if (!m_inputWatch)
+        return;
+    const bool on = m_recording && m_inputOverlay && m_recordBar && m_recordBar->inputDisplay();
+    if (!on) {
+        m_inputWatch->disarm();
+        if (m_inputOverlay)
+            m_inputOverlay->setEnabled(false);
+        return;
+    }
+    // The callbacks hold the overlay itself, not `this`: they only ever store events.
+    const std::shared_ptr<recording::InputOverlay> o = m_inputOverlay;
+    o->reset();           // releases that happened while the hooks were off went unseen
+    o->setEnabled(true);
+    using recording::InputOverlay;
+    platform::IInputWatch::Callbacks cb;
+    cb.onMove = [o](QPoint p) { o->mouseMoved(p); };
+    cb.onButton = [o](Qt::MouseButton b, bool down, QPoint p) {
+        o->mouseButton(b, down, p, InputOverlay::clockMs());
+    };
+    cb.onWheel = [o](bool up, bool horizontal, QPoint p) {
+        o->mouseWheel(up, horizontal, p, InputOverlay::clockMs());
+    };
+    cb.onKey = [o](int key, bool down, const QString& text, const QString& label) {
+        o->key(key, down, text, label, InputOverlay::clockMs());
+    };
+    m_inputWatch->arm(std::move(cb));
 }
 
 // ---- Scrolling capture -----------------------------------------------------------
@@ -4842,6 +4907,8 @@ void SnipOverlay::finish()
     m_scrollMoving = m_moveDragging = false;
     m_scrolling = false;
     if (m_wheelWatch) m_wheelWatch->disarm();
+    if (m_inputWatch) m_inputWatch->disarm();   // the recording's mouse/keyboard hooks
+    m_inputOverlay.reset();
     if (m_scrollIdle) m_scrollIdle->stop();
     if (m_scrollStrip) {
         m_scrollStrip->close();

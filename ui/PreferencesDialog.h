@@ -187,6 +187,7 @@ private:
 
     // Recording tab helpers.
     void restoreRecordingDefaults();       // reset ONLY recording/* keys
+    void updateInputEnablement();          // Recording -> Mouse and keyboard greying
     void refreshRecordingControls();       // re-pull recording widgets from Settings
     // Container/codec are not independent: WebM takes only VP9/AV1, and GIF has no
     // codec and no quality/bitrate/encoder knobs at all. The two cases are handled
@@ -361,6 +362,24 @@ private:
     // separate additions to the page layout and so need a container to hide as one.
     // Hidden for GIF, which carries no audio stream (WinRecorder skips openAudio()).
     QWidget*     m_recAudioSection = nullptr;
+    // Recording -> Mouse and keyboard (recording/input/*), kept as {control, key, default}
+    // lists so refresh and restore are one loop each.
+    struct RecColor { QPushButton* btn; QString key; QColor def; };
+    struct RecCombo { QComboBox* box; QString key; QString def; };
+    static constexpr int kInputLabelRole = Qt::UserRole + 1;   // combo item -> its label key
+    QVector<PasteCheck> m_recInChecks;
+    QVector<PasteSpin>  m_recInSpins;
+    QVector<RecColor>   m_recInColors;
+    QVector<RecCombo>   m_recInCombos;
+    QCheckBox* m_recInEnabled = nullptr;          // master switch = the recording bar's button
+    // Enablement: each switch greys the controls that only matter while it is on.
+    QCheckBox* m_recInHalo = nullptr;
+    QCheckBox* m_recInRipple = nullptr;
+    QCheckBox* m_recInBadge = nullptr;
+    QCheckBox* m_recInKeys = nullptr;
+    QVector<QWidget*> m_recInHaloCtrls, m_recInRippleCtrls, m_recInKeyCtrls;
+    QWidget* m_recInButtonColors = nullptr;       // shared by ripple and badge
+    QVector<QWidget*> m_recInCards;               // mouse + keys cards: greyed by the master switch
 
     // OCR tab (Languages). Each manifest/installed language gets an action button whose
     // label flips Download → Downloading… → Installed/Remove as the folder state changes.

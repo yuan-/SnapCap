@@ -102,6 +102,11 @@ QFrame[card="true"] {
     font-size: 12px;
     color: @text-secondary;
 }
+/* A row inside a disabled container (e.g. Recording -> Mouse and keyboard while its
+ * master switch is off) greys its text as well as its control. */
+#SettingLabel:disabled, #SettingDesc:disabled {
+    color: @text-disabled;
+}
 /* Description-sized text that carries primary emphasis (the quick-snip "+" and its
  * drag hint). Was an inline `color:` literal on those two labels, which could not
  * follow the scheme. */
@@ -235,6 +240,10 @@ QPushButton:hover {
 }
 QPushButton:pressed {
     background: @divider;
+}
+/* Qt greys a disabled button's icon itself, but not text this sheet has coloured. */
+QPushButton:disabled {
+    color: @text-disabled;
 }
 QPushButton#PrimaryButton {
     background: @accent;

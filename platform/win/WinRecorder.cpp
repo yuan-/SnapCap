@@ -1,6 +1,7 @@
 #include "platform/win/WinRecorder.h"
 
 #include "core/i18n/I18n.h"
+#include "core/recording/InputOverlay.h"
 #include "platform/win/WinAudioCapture.h"
 
 #include <QDebug>
@@ -186,9 +187,19 @@ void WinRecorder::setOverlay(const QImage& overlay)
         : overlay.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 }
 
+void WinRecorder::setInputOverlay(std::shared_ptr<recording::InputOverlay> input)
+{
+    QMutexLocker lock(&m_overlayLock);
+    m_input = std::move(input);
+}
+
 void WinRecorder::finish(bool ok, const QString& path, const QString& message)
 {
     m_running.store(false);
+    {
+        QMutexLocker lock(&m_overlayLock);
+        m_input.reset();        // belongs to this take only; the next one sets its own
+    }
     if (!ok)
         m_error = message;
     // Back to the GUI thread: the caller updates widgets and may delete things.
@@ -764,15 +775,24 @@ void WinRecorder::run(Request req)
         // captured alpha happens to be (desktop frames are opaque, but ddagrab does
         // not promise a meaningful alpha channel).
         QImage overlay;
+        std::shared_ptr<recording::InputOverlay> input;
         {
             QMutexLocker lock(&m_overlayLock);
             overlay = m_overlay;
+            input = m_input;
         }
-        if (!overlay.isNull() && av_frame_make_writable(p.srcFrame) >= 0) {
+        // The mouse/keyboard indicators go on top of the annotations, painted for this
+        // frame's moment — they animate, so unlike the overlay they cannot be a still.
+        const bool drawInput = input && input->enabled();
+        if ((!overlay.isNull() || drawInput) && av_frame_make_writable(p.srcFrame) >= 0) {
             QImage frame(p.srcFrame->data[0], p.srcFrame->width, p.srcFrame->height,
                          p.srcFrame->linesize[0], QImage::Format_ARGB32_Premultiplied);
             QPainter painter(&frame);
-            painter.drawImage(frame.rect(), overlay, overlay.rect());
+            if (!overlay.isNull())
+                painter.drawImage(frame.rect(), overlay, overlay.rect());
+            if (drawInput)
+                input->paint(painter, QRect(req.regionCapturePx.topLeft(), frame.size()),
+                             recording::InputOverlay::clockMs());
         }
 
         if (gif) {

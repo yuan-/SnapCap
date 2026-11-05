@@ -34,6 +34,7 @@ public:
     bool isPaused() const override;
     bool isRecording() const override;
     void setOverlay(const QImage& overlay) override;
+    void setInputOverlay(std::shared_ptr<recording::InputOverlay> input) override;
     QString error() const override { return m_error; }
 
 private:
@@ -64,6 +65,7 @@ private:
     // the copy taken under the lock is cheap.
     mutable QMutex m_overlayLock;
     QImage m_overlay;
+    std::shared_ptr<recording::InputOverlay> m_input;   // under m_overlayLock too
     Callbacks m_cb;
     QString m_error;
 };
